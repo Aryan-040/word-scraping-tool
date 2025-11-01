@@ -1,4 +1,4 @@
-# Apache Jira Data Scraping & LLM Training Pipeline
+# Word Scraping Tool
 
 A production-ready data scraping and transformation pipeline that extracts public issue data from Apache's Jira instance and converts it into high-quality datasets for Large Language Model (LLM) training.
 

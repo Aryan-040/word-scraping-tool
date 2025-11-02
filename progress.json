@@ -3,13 +3,13 @@
     "lastStartAt": 350
   },
   "KAFKA": {
-    "lastStartAt": 200
+    "lastStartAt": 1300
   },
   "HIVE": {
-    "lastStartAt": 50
+    "lastStartAt": 250
   },
   "HADOOP": {
-    "lastStartAt": 100
+    "lastStartAt": 700
   },
   "CASSANDRA": {
     "lastStartAt": 150
@@ -19,5 +19,11 @@
   },
   "SOLR": {
     "lastStartAt": 50
+  },
+  "FLINK": {
+    "lastStartAt": 300
+  },
+  "STORM": {
+    "lastStartAt": 300
   }
 }

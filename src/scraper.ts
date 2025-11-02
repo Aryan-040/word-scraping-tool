@@ -146,7 +146,8 @@ async function scrapeProject(project: string) {
       'timespent', 'aggregatetimespent', 'aggregatetimeoriginalestimate'
     ].join(',');
     
-    const url = `https://issues.apache.org/jira/rest/api/2/search?jql=project=${project}&startAt=${startAt}&maxResults=50&expand=changelog&fields=${fields}`;
+    // Expand changelog and renderedFields to get full comment details including rendered body
+    const url = `https://issues.apache.org/jira/rest/api/2/search?jql=project=${project}&startAt=${startAt}&maxResults=50&expand=changelog,renderedFields&fields=${fields}`;
     let data;
     try {
       data = await fetchPageWithRetry(url);

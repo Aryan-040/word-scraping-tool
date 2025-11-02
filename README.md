@@ -14,7 +14,6 @@ A production-ready data scraping and transformation pipeline that extracts publi
 6. [Edge Cases Handled](#edge-cases-handled)
 7. [Optimization Decisions](#optimization-decisions) 
 8. [Features](#features)
-9. [Output Formats](#output-formats)
 
 ---
 
@@ -119,8 +118,7 @@ npm start
 # 3. Or run steps individually
 npm run scrape      # Scrape data
 npm run transform   # Transform to training format
-npm run analyze     # View statistics
-npm run prepare     # Generate format files
+npm run analyze     # View dataset statistics
 ```
 
 ### Interactive Mode
@@ -169,13 +167,6 @@ npm run scrape -- --projects SPARK,KAFKA --limit 100
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Output Format Layer                       │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
-│  │ Prepare  │──│ OpenAI   │  │ Alpaca   │  │ Completion │  │
-│  │ Dataset  │  │ Format   │  │ Format   │  │ Format     │  │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
-└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Component Responsibilities
@@ -207,14 +198,7 @@ npm run scrape -- --projects SPARK,KAFKA --limit 100
   - Sample example generation
 - **Output**: Terminal statistics and reports
 
-#### 4. **Prepare Dataset (`src/prepare_dataset.ts`)**
-- **Purpose**: Convert transformer output into multiple training formats
-- **Responsibilities**:
-  - Format conversion (OpenAI, Alpaca, Completion)
-  - Validation of output structure
-- **Output**: Three format-specific JSONL files
-
-#### 5. **CLI Interface (`src/cli.ts`)**
+#### 4. **CLI Interface (`src/cli.ts`)**
 - **Purpose**: Interactive user configuration
 - **Responsibilities**:
   - Project selection menu
@@ -222,7 +206,7 @@ npm run scrape -- --projects SPARK,KAFKA --limit 100
   - Per-project limit setting
 - **Output**: Configuration object for scraper
 
-#### 6. **UI Utilities (`src/ui.ts`)**
+#### 5. **UI Utilities (`src/ui.ts`)**
 - **Purpose**: Enhanced terminal output formatting
 - **Responsibilities**:
   - Color-coded messages
@@ -280,20 +264,7 @@ fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
 - **Rejected**: Headers may not always include rate limit info
 - **Chosen**: Fixed, conservative limit that works universally
 
-### 4. **Multi-Format Output**
-
-**Decision**: Generate 3 different format files simultaneously
-
-**Reasoning**:
-- **Framework Compatibility**: Different LLM frameworks expect different formats
-- **Future-Proofing**: User doesn't need to know format upfront
-- **One-Time Cost**: Generation happens once, benefits many use cases
-- **Space Efficient**: JSONL format is compact
-
-**Trade-off**: Extra disk space (3x output size)
-- **Acceptable**: Disk space is cheap, developer time is expensive
-
-### 5. **Quality Filtering**
+### 4. **Quality Filtering**
 
 **Decision**: Filter issues with <10 char titles or <20 char content
 
@@ -308,7 +279,7 @@ fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
 - **20 characters**: Removes near-empty descriptions
 - **Tunable**: Easy to adjust in `isQualityIssue()` function
 
-### 6. **Task Multiplicity**
+### 5. **Task Multiplicity**
 
 **Decision**: Generate 3-7 training tasks per issue
 
@@ -327,7 +298,7 @@ fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
 6. Conversation (if comments exist)
 7. Extraction (if description > 100 chars)
 
-### 7. **Interactive CLI**
+### 6. **Interactive CLI**
 
 **Decision**: Interactive menu system for configuration
 
@@ -342,7 +313,7 @@ fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
 - Non-interactive when flags detected
 - Best of both worlds
 
-### 8. **Streaming Processing**
+### 7. **Streaming Processing**
 
 **Decision**: Stream JSONL output instead of loading all in memory
 
@@ -820,8 +791,7 @@ const projectLimit = PER_PROJECT_LIMITS?.[project] ?? MAX_ISSUES;
 - Rich metadata preservation
 
 ### Dataset Preparation
-- Multiple output formats (OpenAI, Alpaca, Completion)
-- Universal compatibility with LLM frameworks
+- Single unified output format (output.jsonl)
 - Ready for training out of the box
 
 ### Analysis Tools
@@ -832,15 +802,6 @@ const projectLimit = PER_PROJECT_LIMITS?.[project] ?? MAX_ISSUES;
 
 ---
 
-## Output Formats
-
-See `FORMATS_EXPLAINED.md` for detailed format documentation.
-
-- **OpenAI Format**: For GPT-3.5/4 fine-tuning
-- **Alpaca Format**: For instruction-following models
-- **Completion Format**: For text completion models
-
----
 
 ## Requirements Coverage
 
@@ -854,7 +815,7 @@ See `FORMATS_EXPLAINED.md` for detailed format documentation.
 | HTTP 5xx handling | ✅ | Retry logic with max timeout |
 | Empty/malformed data | ✅ | Validation and filtering |
 | Rate limiting | ✅ | 200ms minimum interval between requests |
-| JSONL output format | ✅ | Multiple formats supported |
+| JSONL output format | ✅ | Single unified output.jsonl format |
 | Derived tasks | ✅ | 7 different task types generated |
 | Optimization | ✅ | Rate limiting, batch processing, resume |
 | Fault tolerance | ✅ | Comprehensive error handling |
@@ -870,10 +831,7 @@ data/
 │   ├── KAFKA.json
 │   └── HADOOP.json
 └── processed/        # Processed training data
-    ├── output.jsonl           # Main transformer output
-    ├── openai_format.jsonl    # OpenAI fine-tuning format
-    ├── alpaca_format.jsonl    # Alpaca instruction format
-    └── completion_format.jsonl # Completion format
+    └── output.jsonl           # Transformer output
 ```
 
 ---

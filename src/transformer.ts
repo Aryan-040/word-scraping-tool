@@ -3,12 +3,6 @@ import path from "path";
 import jsonlines from "jsonlines";
 import { UI } from "./ui";
 
-/**
- * TRANSFORMER
- * Reads raw Jira issue JSON files, extracts important fields,
- * and writes a cleaned JSONL dataset optimized for LLM training.
- */
-
 interface JiraIssue {
   id: string;
   key: string;
@@ -17,8 +11,8 @@ interface JiraIssue {
     description?: string;
     status?: { name: string };
     priority?: { name: string };
-    assignee?: { displayName: string; emailAddress?: string } | null;
-    reporter?: { displayName: string; emailAddress?: string } | null;
+    assignee?: { displayName: string; emailAddress?: string; accountId?: string } | null;
+    reporter?: { displayName: string; emailAddress?: string; accountId?: string } | null;
     project?: { key: string; name: string };
     issuetype?: { name: string };
     created?: string;
@@ -29,10 +23,25 @@ interface JiraIssue {
     components?: { name: string }[];
     comment?: { 
       comments?: Array<{ 
+        id?: string;
         body: string; 
-        author?: { displayName: string };
+        author?: { displayName: string; emailAddress?: string; accountId?: string; key?: string };
         created?: string;
+        updated?: string;
+        updateAuthor?: { displayName: string; emailAddress?: string; accountId?: string } | null;
+        visibility?: { type: string; value: string };
       }>;
+      maxResults?: number;
+      total?: number;
+      startAt?: number;
+    };
+    renderedFields?: {
+      description?: string;
+      comment?: {
+        comments?: Array<{
+          body?: string;
+        }>;
+      };
     };
   };
 }
@@ -68,10 +77,18 @@ function generateTrainingTasks(issue: JiraIssue) {
   const status = issue.fields.status?.name || "Unknown";
   const priority = issue.fields.priority?.name || "Unknown";
   const project = issue.fields.project?.key || "Unknown";
+  // Extract comments with full metadata
   const comments = issue.fields.comment?.comments?.map(c => ({
+    id: c.id,
     author: c.author?.displayName || "Anonymous",
+    author_email: c.author?.emailAddress,
+    author_accountId: c.author?.accountId,
     body: cleanText(c.body),
-    created: c.created
+    body_raw: c.body, // Keep raw body for reference
+    created: c.created,
+    updated: c.updated,
+    updateAuthor: c.updateAuthor?.displayName,
+    visibility: c.visibility
   })) || [];
   
   const allText = [title, description, ...comments.map(c => c.body)].filter(Boolean).join(" ");
@@ -198,7 +215,26 @@ async function transform() {
         continue;
       }
 
-      // Extract comprehensive metadata
+      // Extract comprehensive metadata including full comment details
+      const comments = issue.fields.comment?.comments?.map(c => ({
+        id: c.id,
+        author: {
+          displayName: c.author?.displayName || "Anonymous",
+          emailAddress: c.author?.emailAddress,
+          accountId: c.author?.accountId
+        },
+        body: cleanText(c.body),
+        body_raw: c.body, // Keep raw body for reference
+        created: c.created,
+        updated: c.updated,
+        updateAuthor: c.updateAuthor ? {
+          displayName: c.updateAuthor.displayName,
+          emailAddress: c.updateAuthor.emailAddress,
+          accountId: c.updateAuthor.accountId
+        } : null,
+        visibility: c.visibility
+      })) || [];
+
       const metadata = {
         issue_id: issue.key || issue.id,
         project: issue.fields.project?.key || file.replace(".json", ""),
@@ -206,15 +242,24 @@ async function transform() {
         issue_type: issue.fields.issuetype?.name,
         status: issue.fields.status?.name || "Unknown",
         priority: issue.fields.priority?.name,
-        assignee: issue.fields.assignee?.displayName,
-        reporter: issue.fields.reporter?.displayName || "Anonymous",
+        assignee: issue.fields.assignee ? {
+          displayName: issue.fields.assignee.displayName,
+          emailAddress: issue.fields.assignee.emailAddress,
+          accountId: issue.fields.assignee.accountId
+        } : null,
+        reporter: issue.fields.reporter ? {
+          displayName: issue.fields.reporter.displayName || "Anonymous",
+          emailAddress: issue.fields.reporter.emailAddress,
+          accountId: issue.fields.reporter.accountId
+        } : { displayName: "Anonymous" },
         created: issue.fields.created,
         updated: issue.fields.updated,
         resolved: issue.fields.resolutiondate,
         resolution: issue.fields.resolution?.name,
         labels: issue.fields.labels || [],
         components: issue.fields.components?.map(c => c.name) || [],
-        comment_count: issue.fields.comment?.comments?.length || 0
+        comment_count: comments.length,
+        comments: comments // Include full comment data in metadata
       };
 
       // Generate training tasks

@@ -64,7 +64,6 @@ async function main() {
   console.log();
   UI.subheader("Next Steps", 70);
   UI.listItem(1, "npm run analyze  - View dataset statistics", false);
-  UI.listItem(2, "npm run prepare  - Generate training formats", false);
 }
 
 main().catch((err) => {

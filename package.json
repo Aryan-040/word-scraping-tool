@@ -8,8 +8,7 @@
     "scrape": "ts-node src/scraper.ts",
     "transform": "ts-node src/transformer.ts",
     "analyze": "ts-node src/analyze_dataset.ts",
-    "prepare": "ts-node src/prepare_dataset.ts",
-    "pipeline": "npm run scrape && npm run transform && npm run analyze && npm run prepare"
+    "pipeline": "npm run scrape && npm run transform && npm run analyze"
   },
   "keywords": [],
   "author": "",

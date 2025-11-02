@@ -1,4 +1,4 @@
-# Apache Jira Data Scraping & LLM Training Pipeline
+# Word Scraping Tool
 
 A production-ready data scraping and transformation pipeline that extracts public issue data from Apache's Jira instance and converts it into high-quality datasets for Large Language Model (LLM) training.
 
@@ -30,7 +30,7 @@ A production-ready data scraping and transformation pipeline that extracts publi
 
 1. **Clone or extract the project**
    ```bash
-   cd word-scraping-tutor
+   cd web-scraping-tutor
    ```
 
 2. **Install dependencies**

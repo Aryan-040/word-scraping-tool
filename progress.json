@@ -3,7 +3,7 @@
     "lastStartAt": 350
   },
   "KAFKA": {
-    "lastStartAt": 1300
+    "lastStartAt": 1600
   },
   "HIVE": {
     "lastStartAt": 250
@@ -21,7 +21,7 @@
     "lastStartAt": 50
   },
   "FLINK": {
-    "lastStartAt": 300
+    "lastStartAt": 700
   },
   "STORM": {
     "lastStartAt": 300
